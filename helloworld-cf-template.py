@@ -55,7 +55,7 @@ ud = Base64(Join('\n', [
     "start helloworld"
 ]))
 
-instance = t.add_resource(ec2.Instance(
+t.add_resource(ec2.Instance(
     "instance",
     ImageId="ami-15e9c770",
     InstanceType="t2.micro",
@@ -67,14 +67,14 @@ instance = t.add_resource(ec2.Instance(
 t.add_output(Output(
     "InstancePublicIp",
     Description="Public IP of our instance.",
-    Value=GetAtt(instance, "PublicIp"),
+    Value=GetAtt("instance", "PublicIp"),
 ))
 
 t.add_output(Output(
     "WebUrl",
     Description="Application endpoint",
     Value=Join("", [
-        "http://", GetAtt(instance, "PublicDnsName"),
+        "http://", GetAtt("instance", "PublicDnsName"),
         ":", ApplicationPort
     ]),
 ))

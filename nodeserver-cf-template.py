@@ -15,7 +15,25 @@ from troposphere import (
     Template,
 )
 
-ApplicationName = "helloworld"
+from troposphere.iam import (
+    InstanceProfile,
+    PolicyType as IAMPolicy,
+    Role,
+)
+
+from awacs.aws import (
+    Action,
+    Allow,
+    Policy,
+    Principal,
+    Statement,
+)
+
+from awacs.sts import (
+    AssumeRole
+)
+
+ApplicationName = "nodeserver"
 ApplicationPort = "3000"
 
 GithubAccount = "tsyork"
@@ -63,8 +81,45 @@ ud = Base64(Join('\n', [
     "yum install --enablerepo=epel -y git",
     "pip install ansible",
     AnsiblePullCmd,
-    "echo '*/10 * * * * {}' > /etc/cron.d/ansible-pull".format(AnsiblePullCmd)
+    "echo '*/10 * * * * {}' > /etc/cron.d/ansible-pull".format(AnsiblePullCmd),
+    "sudo yum install -y java-1.8.0-openjdk.x86_64",
+    "sudo /usr/sbin/alternatives --set java /usr/lib/jvm/jre-1.8.0-openjdk.x86_64/bin/java",
+    "sudo /usr/sbin/alternatives --set javac /usr/lib/jvm/jre-1.8.0-openjdk.x86_64/bin/javac",
+    "sudo yum remove java-1.7"
 ]))
+
+t.add_resource(Role(
+    "Role",
+    AssumeRolePolicyDocument=Policy(
+        Statement=[
+            Statement(
+                Effect=Allow,
+                Action=[AssumeRole],
+                Principal=Principal("Service", ["ec2.amazonaws.com"])
+            )
+        ]
+    )
+))
+
+t.add_resource(InstanceProfile(
+    "InstanceProfile",
+    Path="/",
+    Roles=[Ref("Role")]
+))
+
+t.add_resource(IAMPolicy(
+    "Policy",
+    PolicyName="AllowS3",
+    PolicyDocument=Policy(
+        Statement=[
+            Statement(
+                Effect=Allow,
+                Action=[Action("s3", "*")],
+                Resource=["*"])
+        ]
+    ),
+    Roles=[Ref("Role")]
+))
 
 t.add_resource(ec2.Instance(
     "instance",
@@ -73,6 +128,7 @@ t.add_resource(ec2.Instance(
     SecurityGroups=[Ref("SecurityGroup")],
     KeyName=Ref("KeyPair"),
     UserData=ud,
+    IamInstanceProfile=Ref("InstanceProfile"),
 ))
 
 t.add_output(Output(
