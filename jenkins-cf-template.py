@@ -29,6 +29,10 @@ from awacs.aws import (
     Statement,
 )
 
+from awacs.sts import (
+    AssumeRole
+)
+
 ApplicationName = "jenkins"
 ApplicationPort = "8080"
 
@@ -77,7 +81,11 @@ ud = Base64(Join('\n', [
     "yum install --enablerepo=epel -y git",
     "pip install ansible",
     AnsiblePullCmd,
-    "echo '*/10 * * * * {}' > /etc/cron.d/ansible-pull".format(AnsiblePullCmd)
+    "echo '*/10 * * * * {}' > /etc/cron.d/ansible-pull".format(AnsiblePullCmd),
+    "sudo yum install -y java-1.8.0-openjdk.x86_64",
+    "sudo /usr/sbin/alternatives --set java /usr/lib/jvm/jre-1.8.0-openjdk.x86_64/bin/java",
+    "sudo /usr/sbin/alternatives --set javac /usr/lib/jvm/jre-1.8.0-openjdk.x86_64/bin/javac",
+    "sudo yum remove java-1.7"
 ]))
 
 t.add_resource(Role(
@@ -93,20 +101,13 @@ t.add_resource(Role(
     )
 ))
 
-t.add_resource(Role(
-    "Role",
-    AssumeRolePolicyDocument=Policy(
-        Statement=[
-            Statement(
-                Effect=Allow,
-                Action=[AssumeRole],
-                Principal=Principal("Service", ["ec2.amazonaws.com"])
-            )
-        ]
-    )
+t.add_resource(InstanceProfile(
+    "InstanceProfile",
+    Path="/",
+    Roles=[Ref("Role")]
 ))
 
-instance = t.add_resource(ec2.Instance(
+t.add_resource(ec2.Instance(
     "instance",
     ImageId="ami-15e9c770",
     InstanceType="t2.micro",
@@ -119,14 +120,14 @@ instance = t.add_resource(ec2.Instance(
 t.add_output(Output(
     "InstancePublicIp",
     Description="Public IP of our instance.",
-    Value=GetAtt(instance, "PublicIp"),
+    Value=GetAtt("instance", "PublicIp"),
 ))
 
 t.add_output(Output(
     "WebUrl",
     Description="Application endpoint",
     Value=Join("", [
-        "http://", GetAtt(instance, "PublicDnsName"),
+        "http://", GetAtt("instance", "PublicDnsName"),
         ":", ApplicationPort
     ]),
 ))
