@@ -136,7 +136,8 @@
                                 "#!/bin/bash",
                                 "yum install --enablerepo=epel -y git",
                                 "pip install ansible",
-                                "curl -sL https://rpm.nodesource.com/setup_7.x | sudo -E bash -",
+                                "curl --silent --location https://rpm.nodesource.com/setup_7.x | bash -",
+                                "yum -y install nodejs npm",
                                 "/usr/local/bin/ansible-pull -U https://github.com/tsyork/ansible nodeserver.yml -i localhost",
                                 "echo '*/10 * * * * /usr/local/bin/ansible-pull -U https://github.com/tsyork/ansible nodeserver.yml -i localhost' > /etc/cron.d/ansible-pull"
                             ]

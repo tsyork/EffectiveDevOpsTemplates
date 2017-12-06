@@ -80,7 +80,8 @@ ud = Base64(Join('\n', [
     "#!/bin/bash",
     "yum install --enablerepo=epel -y git",
     "pip install ansible",
-    "curl -sL https://rpm.nodesource.com/setup_8.x | sudo -E bash -",
+    "curl --silent --location https://rpm.nodesource.com/setup_7.x | bash -",
+    "yum -y install nodejs npm",
     AnsiblePullCmd,
     "echo '*/10 * * * * {}' > /etc/cron.d/ansible-pull".format(AnsiblePullCmd)
 ]))
