@@ -80,12 +80,9 @@ ud = Base64(Join('\n', [
     "#!/bin/bash",
     "yum install --enablerepo=epel -y git",
     "pip install ansible",
+    "curl -sL https://rpm.nodesource.com/setup_8.x | sudo -E bash -",
     AnsiblePullCmd,
-    "echo '*/10 * * * * {}' > /etc/cron.d/ansible-pull".format(AnsiblePullCmd),
-    "sudo yum install -y java-1.8.0-openjdk.x86_64",
-    "sudo /usr/sbin/alternatives --set java /usr/lib/jvm/jre-1.8.0-openjdk.x86_64/bin/java",
-    "sudo /usr/sbin/alternatives --set javac /usr/lib/jvm/jre-1.8.0-openjdk.x86_64/bin/javac",
-    "sudo yum remove java-1.7"
+    "echo '*/10 * * * * {}' > /etc/cron.d/ansible-pull".format(AnsiblePullCmd)
 ]))
 
 t.add_resource(Role(
